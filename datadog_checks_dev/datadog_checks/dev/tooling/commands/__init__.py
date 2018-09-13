@@ -8,6 +8,7 @@ from .dep import dep
 from .manifest import manifest
 from .release import release
 from .test import test
+from .run import run
 
 ALL_COMMANDS = (
     clean,
@@ -17,4 +18,5 @@ ALL_COMMANDS = (
     manifest,
     release,
     test,
+    run,
 )
