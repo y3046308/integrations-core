@@ -39,7 +39,8 @@ class IbmMqCheck(AgentCheck):
         tags = [
             "queue_manager:{}".format(queue_manager_name),
             "host:{}".format(host),
-            "port:{}".format(port)
+            "port:{}".format(port),
+            "channel:{}".format(channel)
         ]
 
         tags += custom_tags
