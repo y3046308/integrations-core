@@ -18,6 +18,10 @@ class IbmMqCheck(AgentCheck):
 
     METRIC_PREFIX = 'ibm_mq'
 
+    SERVICE_CHECK = 'ibm_mq.queue_manager.can_connect'
+
+    QUEUE_SERVICE_CHECK = 'ibm_mq.queue.can_connect'
+
     def check(self, instance):
         if not pymqi:
             self.log.error("You need to install pymqi")
@@ -45,12 +49,20 @@ class IbmMqCheck(AgentCheck):
 
         tags += custom_tags
 
-        if username and password:
-            self.log.debug("connecting with username and password")
-            queue_manager = pymqi.connect(queue_manager_name, channel, host_and_port, username, password)
-        else:
-            self.log.debug("connecting without a username and password")
-            queue_manager = pymqi.connect(queue_manager_name, channel, host_and_port)
+        try:
+            if username and password:
+                self.log.debug("connecting with username and password")
+                queue_manager = pymqi.connect(queue_manager_name, channel, host_and_port, username, password)
+            else:
+                self.log.debug("connecting without a username and password")
+                queue_manager = pymqi.connect(queue_manager_name, channel, host_and_port)
+                self.service_check(SERVICE_CHECK, AgentCheck.OK, tags)
+        except Exception as e:
+            self.warning("cannot connect to queue manager: {}".format(e))
+            self.service_check(SERVICE_CHECK, AgentCheck.CRITICAL, tags)
+            # if it cannot connect to the queue manager, the rest of the check won't work
+            # abort the check here
+            raise
 
         self.queue_manager_stats(queue_manager, tags)
 
@@ -61,8 +73,10 @@ class IbmMqCheck(AgentCheck):
             try:
                 queue = pymqi.Queue(queue_manager, queue_name)
                 self.queue_stats(queue, queue_tags)
+                self.service_check(QUEUE_SERVICE_CHECK, AgentCheck.OK, tags)
             except Exception as e:
                 self.warning('Cannot connect to queue {}: {}'.format(queue_name, e))
+                self.service_check(QUEUE_SERVICE_CHECK, AgentCheck.CRITICAL, tags)
 
     def queue_manager_stats(self, queue_manager, tags):
         for mname, pymqi_value in iteritems(metrics.QUEUE_MANAGER_METRICS):

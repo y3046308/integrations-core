@@ -36,14 +36,6 @@ QUEUE_METRICS = {
     'max_channels': pymqi.CMQC.MQIA_MAX_CHANNELS
 }
 
-QUEUE_TAGS = {
-
-}
-
-CHANNEL_METRICS = {
-
-}
-
 QUEUE_MANAGER_METRICS = {
     'dist_lists': pymqi.CMQC.MQIA_DIST_LISTS,
     'max_msg_list': pymqi.CMQC.MQIA_MAX_MSG_LENGTH,
