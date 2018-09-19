@@ -18,8 +18,9 @@ class IbmMqCheck(AgentCheck):
 
     METRIC_PREFIX = 'ibm_mq'
 
-    SERVICE_CHECK = 'ibm_mq.queue_manager.can_connect'
+    SERVICE_CHECK = 'ibm_mq.can_connect'
 
+    QUEUE_MANAGER_SERVICE_CHECK = 'ibm_mq.queue_manager'
     QUEUE_SERVICE_CHECK = 'ibm_mq.queue.can_connect'
 
     def check(self, instance):
@@ -56,10 +57,11 @@ class IbmMqCheck(AgentCheck):
             else:
                 self.log.debug("connecting without a username and password")
                 queue_manager = pymqi.connect(queue_manager_name, channel, host_and_port)
-                self.service_check(SERVICE_CHECK, AgentCheck.OK, tags)
+            # if we've reached here, send the service check
+            self.service_check(self.SERVICE_CHECK, AgentCheck.OK, tags)
         except Exception as e:
             self.warning("cannot connect to queue manager: {}".format(e))
-            self.service_check(SERVICE_CHECK, AgentCheck.CRITICAL, tags)
+            self.service_check(self.SERVICE_CHECK, AgentCheck.CRITICAL, tags)
             # if it cannot connect to the queue manager, the rest of the check won't work
             # abort the check here
             raise
@@ -73,10 +75,10 @@ class IbmMqCheck(AgentCheck):
             try:
                 queue = pymqi.Queue(queue_manager, queue_name)
                 self.queue_stats(queue, queue_tags)
-                self.service_check(QUEUE_SERVICE_CHECK, AgentCheck.OK, tags)
+                self.service_check(self.QUEUE_SERVICE_CHECK, AgentCheck.OK, tags)
             except Exception as e:
                 self.warning('Cannot connect to queue {}: {}'.format(queue_name, e))
-                self.service_check(QUEUE_SERVICE_CHECK, AgentCheck.CRITICAL, tags)
+                self.service_check(self.QUEUE_SERVICE_CHECK, AgentCheck.CRITICAL, tags)
 
     def queue_manager_stats(self, queue_manager, tags):
         for mname, pymqi_value in iteritems(metrics.QUEUE_MANAGER_METRICS):
@@ -85,9 +87,10 @@ class IbmMqCheck(AgentCheck):
 
                 mname = '{}.queue_manager.{}'.format(self.METRIC_PREFIX, mname)
                 self.gauge(mname, m, tags=tags)
-                self.log.info("{} {} tags={}".format(mname, m, tags))
+                self.service_check(self.QUEUE_MANAGER_SERVICE_CHECK, AgentCheck.OK, tags)
             except pymqi.Error as e:
-                self.log.info("Error getting queue manager stats: {}".format(e))
+                self.log.warning("Error getting queue manager stats: {}".format(e))
+                self.service_check(self.QUEUE_MANAGER_SERVICE_CHECK, AgentCheck.CRITICAL, tags)
 
     def queue_stats(self, queue, tags):
         for mname, pymqi_value in iteritems(metrics.QUEUE_METRICS):
@@ -95,8 +98,5 @@ class IbmMqCheck(AgentCheck):
                 m = queue.inquire(pymqi_value)
                 mname = '{}.queue.{}'.format(self.METRIC_PREFIX, mname)
                 self.gauge(mname, m, tags=tags)
-                self.log.info("{} {} tags={}".format(mname, m, tags))
             except pymqi.Error as e:
                 self.log.info("Error getting queue stats: {}".format(e))
-
-    def channel_stats(self, queue_manager, tags):
