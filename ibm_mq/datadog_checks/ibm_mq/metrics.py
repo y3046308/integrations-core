@@ -50,3 +50,17 @@ CREATION = {
     'CreationTime': 'MQCA_CREATION_TIME',
     'CreationDate': 'MQCA_CREATION_DATE',
 }
+
+
+def depth_percent(queue):
+    depth_current = queue.inquire(QUEUE_METRICS['depth_current'])
+    depth_max = queue.inquire(QUEUE_METRICS['depth_max'])
+
+    depth_fraction = float(depth_current) / float(depth_max)
+    depth_percent = depth_fraction * 100
+
+    return depth_percent
+
+QUEUE_METRICS_FUNCTIONS = {
+    'depth_percent': depth_percent,
+}
