@@ -7,3 +7,5 @@ instances:
     port: '1414'
     username: 'admin'
     password: 'passw0rd'
+    queues:
+      - 'DEV.QUEUE.1'
