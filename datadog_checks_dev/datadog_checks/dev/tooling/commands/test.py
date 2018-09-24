@@ -9,7 +9,6 @@ from .utils import CONTEXT_SETTINGS, abort, echo_info, echo_success, echo_waitin
 from ..constants import TESTABLE_FILE_EXTENSIONS, get_root
 from ..git import files_changed
 from ..utils import get_testable_checks
-from ...structures import EnvVars
 from ...subprocess import run_command
 from ...utils import chdir, file_exists, remove_path, running_on_ci
 
@@ -131,49 +130,48 @@ def test(checks, bench, coverage, cov_missing, enter_pdb, debug, verbose, change
         if verbose:
             echo_info('pytest options: `{}`'.format(test_env_vars['PYTEST_ADDOPTS']))
 
-        with chdir(os.path.join(root, check)):
+        with chdir(os.path.join(root, check), env_vars=test_env_vars):
             env_list = run_command('tox --listenvs', capture='out').stdout
             env_list = [e.strip() for e in env_list.splitlines()]
 
-            with EnvVars(test_env_vars):
-                if bench:
-                    benches = [e for e in env_list if 'bench' in e]
-                    if benches:
-                        wait_text = 'Running benchmarks for `{}`'.format(check)
-                        echo_waiting(wait_text)
-                        echo_waiting('-' * len(wait_text))
+            if bench:
+                benches = [e for e in env_list if 'bench' in e]
+                if benches:
+                    wait_text = 'Running benchmarks for `{}`'.format(check)
+                    echo_waiting(wait_text)
+                    echo_waiting('-' * len(wait_text))
 
-                        result = run_command('tox --develop -e {}'.format(','.join(benches)))
-                        if result.code:
-                            abort('\nFailed!', code=result.code)
+                    result = run_command('tox --develop -e {}'.format(','.join(benches)))
+                    if result.code:
+                        abort('\nFailed!', code=result.code)
+            else:
+                non_benches = [e for e in env_list if 'bench' not in e]
+                if non_benches:
+                    wait_text = 'Running tests for `{}`'.format(check)
+                    echo_waiting(wait_text)
+                    echo_waiting('-' * len(wait_text))
+
+                    result = run_command('tox --develop -e {}'.format(','.join(non_benches)))
+                    if result.code:
+                        abort('\nFailed!', code=result.code)
+
+            if coverage and file_exists('.coverage'):
+                if not cov_keep:
+                    echo_info('\n---------- Coverage report ----------\n')
+
+                    result = run_command('coverage report --rcfile=../.coveragerc')
+                    if result.code:
+                        abort('\nFailed!', code=result.code)
+
+                if testing_on_ci:
+                    result = run_command('coverage xml -i --rcfile=../.coveragerc')
+                    if result.code:
+                        abort('\nFailed!', code=result.code)
+
+                    run_command('codecov -X gcov -F {} -f coverage.xml'.format(check))
                 else:
-                    non_benches = [e for e in env_list if 'bench' not in e]
-                    if non_benches:
-                        wait_text = 'Running tests for `{}`'.format(check)
-                        echo_waiting(wait_text)
-                        echo_waiting('-' * len(wait_text))
-
-                        result = run_command('tox --develop -e {}'.format(','.join(non_benches)))
-                        if result.code:
-                            abort('\nFailed!', code=result.code)
-
-                if coverage and file_exists('.coverage'):
                     if not cov_keep:
-                        echo_info('\n---------- Coverage report ----------\n')
-
-                        result = run_command('coverage report --rcfile=../.coveragerc')
-                        if result.code:
-                            abort('\nFailed!', code=result.code)
-
-                    if testing_on_ci:
-                        result = run_command('coverage xml -i --rcfile=../.coveragerc')
-                        if result.code:
-                            abort('\nFailed!', code=result.code)
-
-                        run_command('codecov -X gcov -F {} -f coverage.xml'.format(check))
-                    else:
-                        if not cov_keep:
-                            remove_path('.coverage')
-                            remove_path('coverage.xml')
+                        remove_path('.coverage')
+                        remove_path('coverage.xml')
 
         echo_success('\nPassed!{}'.format('' if i == num_checks else '\n'))
