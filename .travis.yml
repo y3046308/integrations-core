@@ -119,7 +119,7 @@ jobs:
     - stage: test
       env: CHECK=http_check
     - stage: test
-      env: CHECK=ibm_mq
+      env: CHECK=ibm_mq C_INCLUDE_PATH=/opt/mqm/inc
       script:
         - chmod +x .travis/install.sh
         - .travis/install_ibm_mq.sh

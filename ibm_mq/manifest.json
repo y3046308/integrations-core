@@ -6,7 +6,7 @@
   "metric_prefix": "ibm_mq.",
   "metric_to_check": "",
   "creates_events": false,
-  "short_description": "",
+  "short_description": "IBM MQ is a ",
   "guid": "873153b6-5184-438a-8a32-1e2d2e490dde",
   "support": "core",
   "supported_os": [
