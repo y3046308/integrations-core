@@ -8,8 +8,7 @@ This check monitors [Ibm_mq][1].
 
 ### Installation
 
-The Ibm_mq check is included in the [Datadog Agent][2] package, so you do not
-need to install anything else on your server.
+The Ibm_mq check is included in the [Datadog Agent][2] package. However, in order for it to work it needs to have an IBM MQ client installed on the box.
 
 ### Configuration
 
@@ -41,7 +40,7 @@ Ibm_mq does not include any events.
 
 Need help? Contact [Datadog Support][6].
 
-[1]: **LINK_TO_INTEGERATION_SITE**
+[1]: https://www.ibm.com/products/mq
 [2]: https://app.datadoghq.com/account/settings#agent
 [3]: https://github.com/DataDog/integrations-core/blob/master/ibm_mq/datadog_checks/ibm_mq/data/conf.yaml.example
 [4]: https://docs.datadoghq.com/agent/faq/agent-commands/#start-stop-restart-the-agent

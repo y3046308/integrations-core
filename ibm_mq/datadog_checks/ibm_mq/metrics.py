@@ -61,6 +61,7 @@ def depth_percent(queue):
 
     return depth_percent
 
+
 QUEUE_METRICS_FUNCTIONS = {
     'depth_percent': depth_percent,
 }

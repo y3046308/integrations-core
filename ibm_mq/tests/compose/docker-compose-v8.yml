@@ -3,9 +3,10 @@ version: '3'
 # Adapted from https://github.com/dwilbraham/docker-compose-etcd
 services:
   ibmmq:
-    image: ibmcom/mq:${IBM_MQ_VERSION}
+    build:
+      context: ${COMPOSE_DIR}/v8
     environment:
       - MQ_QMGR_NAME=datadog
       - LICENSE=accept
     ports:
-      - "2379:2379"
+      - "1414:1414"

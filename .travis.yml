@@ -119,6 +119,15 @@ jobs:
     - stage: test
       env: CHECK=http_check
     - stage: test
+      env: CHECK=ibm_mq
+      script:
+        - chmod +x .travis/install.sh
+        - .travis/install_ibm_mq.sh
+        - ddev dep verify
+        - ddev manifest verify --include-extras
+        - travis_retry ddev test --cov ${CHECK}
+        - ddev test ${CHECK} --bench || true
+    - stage: test
       env: CHECK=iis
     - stage: test
       env: CHECK=istio
@@ -233,7 +242,7 @@ jobs:
     - stage: test
       env: CHECK=zk
 before_install:
-  - chmod +x .travis/prepare.sh
+  - chmod +x /prepare.sh
   - .travis/prepare.sh
   - PATH="$PATH:$(pyenv root)/versions/3.6/bin"
 install:
