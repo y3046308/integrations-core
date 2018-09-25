@@ -119,6 +119,7 @@ jobs:
     - stage: test
       env: CHECK=http_check
     - stage: test
+      # if the c include path doesn't have the proper path pymqi will not compile
       env: CHECK=ibm_mq C_INCLUDE_PATH=/opt/mqm/inc
       script:
         - chmod +x .travis/install.sh
