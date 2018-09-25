@@ -20,6 +20,8 @@ env:
   global:
     - SKIP_CLEANUP=true
     - PIP_CACHE=$HOME/.cache/pip
+    # if the c include path doesn't have the proper path pymqi will not compile
+    - C_INCLUDE_PATH=/opt/mqm/inc
 
 stages:
   - name: test_changed
@@ -119,15 +121,7 @@ jobs:
     - stage: test
       env: CHECK=http_check
     - stage: test
-      # if the c include path doesn't have the proper path pymqi will not compile
-      env: CHECK=ibm_mq C_INCLUDE_PATH=/opt/mqm/inc
-      script:
-        - chmod +x .travis/install.sh
-        - .travis/install_ibm_mq.sh
-        - ddev dep verify
-        - ddev manifest verify --include-extras
-        - travis_retry ddev test --cov ${CHECK}
-        - ddev test ${CHECK} --bench || true
+      env: CHECK=ibm_mq
     - stage: test
       env: CHECK=iis
     - stage: test
@@ -246,6 +240,9 @@ before_install:
   - chmod +x .travis/prepare.sh
   - .travis/prepare.sh
   - PATH="$PATH:$(pyenv root)/versions/3.6/bin"
+  # since on PRs it only runs test_changed we have to do this globally
+  - chmod +x .travis/install_ibm_mq.sh
+  - .travis/install_ibm_mq.sh
 install:
   - pip install -U pip setuptools codecov
   - pip install ./datadog_checks_dev[cli]
