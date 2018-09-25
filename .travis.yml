@@ -242,7 +242,7 @@ jobs:
     - stage: test
       env: CHECK=zk
 before_install:
-  - chmod +x /prepare.sh
+  - chmod +x .travis/prepare.sh
   - .travis/prepare.sh
   - PATH="$PATH:$(pyenv root)/versions/3.6/bin"
 install:
